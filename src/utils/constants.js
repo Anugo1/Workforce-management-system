@@ -1,0 +1,34 @@
+/**
+ * Application-wide constants
+ */
+
+const LEAVE_REQUEST_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  PENDING_APPROVAL: 'PENDING_APPROVAL'
+};
+
+const AUTO_APPROVE_DAYS_THRESHOLD = 2;
+
+const QUEUE_EVENTS = {
+  LEAVE_REQUESTED: 'leave.requested',
+  LEAVE_APPROVED: 'leave.approved',
+  LEAVE_REJECTED: 'leave.rejected'
+};
+
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500,
+  CONFLICT: 409
+};
+
+module.exports = {
+  LEAVE_REQUEST_STATUS,
+  AUTO_APPROVE_DAYS_THRESHOLD,
+  QUEUE_EVENTS,
+  HTTP_STATUS
+};
