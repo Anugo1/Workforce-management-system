@@ -151,14 +151,7 @@ Missing RabbitMQ credentials simply disable the consumer (with warning logs) so 
 
 ---
 
-## Roadmap / TODOs
 
-- Implement authentication/authorization (JWT).
-- Add request/response documentation (Swagger/OpenAPI).
-- Replace `sync({ alter: true })` with migrations + seeders.
-- Expand tests (unit + integration via Supertest).
-- Containerize (Docker/Docker Compose) and set up CI/CD.
-- Add observability: metrics, structured log shipping, and alerting.
 
 ---
 
@@ -178,11 +171,9 @@ Missing RabbitMQ credentials simply disable the consumer (with warning logs) so 
 1. Fork & clone.
 2. Create feature branch.
 3. Implement changes with tests (when available).
-4. Run lint/tests (TODO).
+4. Run lint/tests 
 5. Submit PR.
 
 ---
 
-## License
 
-This project currently has no explicit license. Add one before distributing or deploying publicly.
