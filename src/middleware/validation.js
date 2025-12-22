@@ -3,7 +3,7 @@
  */
 
 const { body, param, query, validationResult } = require('express-validator');
-const { HTTP_STATUS } = require('../utils/constants');
+const { HTTP_STATUS, LEAVE_REQUEST_STATUS } = require('../utils/constants');
 
 /**
  * Handle validation errors
@@ -55,6 +55,31 @@ const validateEmployee = [
 ];
 
 /**
+ * Employee update validation rules (partial)
+ */
+const validateEmployeeUpdate = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 }).withMessage('Employee name must be between 2 and 100 characters'),
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('departmentId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Department ID must be a positive integer'),
+  body().custom((value, { req }) => {
+    if (!Object.keys(req.body || {}).length) {
+      throw new Error('At least one field must be provided for update');
+    }
+    return true;
+  }),
+  handleValidationErrors
+];
+
+/**
  * Leave request validation rules
  */
 const validateLeaveRequest = [
@@ -80,11 +105,31 @@ const validateLeaveRequest = [
 ];
 
 /**
+ * Build ID validator for a specific param name
+ */
+const buildIdValidator = (paramName = 'id') => ([
+  param(paramName)
+    .isInt({ min: 1 }).withMessage(`${paramName} must be a positive integer`),
+  handleValidationErrors
+]);
+
+/**
  * ID parameter validation
  */
-const validateId = [
-  param('id')
-    .isInt({ min: 1 }).withMessage('ID must be a positive integer'),
+const validateId = buildIdValidator();
+
+/**
+ * Employee ID param validation (e.g., stats endpoints)
+ */
+const validateEmployeeIdParam = buildIdValidator('employeeId');
+
+/**
+ * Employee ID in body validation
+ */
+const validateEmployeeIdBody = [
+  body('employeeId')
+    .notEmpty().withMessage('Employee ID is required')
+    .isInt({ min: 1 }).withMessage('Employee ID must be a positive integer'),
   handleValidationErrors
 ];
 
@@ -102,22 +147,84 @@ const validatePagination = [
 ];
 
 /**
+ * Employee list filters (query params)
+ */
+const validateEmployeeListFilters = [
+  query('departmentId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Department ID filter must be a positive integer'),
+  query('search')
+    .optional()
+    .isLength({ min: 1, max: 255 }).withMessage('Search term must be between 1 and 255 characters'),
+  handleValidationErrors
+];
+
+/**
  * Status validation
  */
 const validateStatus = [
   body('status')
     .notEmpty().withMessage('Status is required')
-    .isIn(['PENDING', 'APPROVED', 'REJECTED', 'PENDING_APPROVAL'])
+    .isIn(Object.values(LEAVE_REQUEST_STATUS))
     .withMessage('Invalid status value'),
+  handleValidationErrors
+];
+
+/**
+ * Status query validation
+ */
+const validateStatusQuery = [
+  query('status')
+    .optional()
+    .isIn(Object.values(LEAVE_REQUEST_STATUS))
+    .withMessage('Invalid status value'),
+  handleValidationErrors
+];
+
+/**
+ * Leave request filters validation (query params)
+ */
+const validateLeaveRequestFilters = [
+  query('employeeId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Employee ID filter must be a positive integer'),
+  query('status')
+    .optional()
+    .isIn(Object.values(LEAVE_REQUEST_STATUS))
+    .withMessage('Invalid status filter'),
+  query('startDate')
+    .optional()
+    .isISO8601().withMessage('Start date filter must be a valid date (YYYY-MM-DD)'),
+  query('endDate')
+    .optional()
+    .isISO8601().withMessage('End date filter must be a valid date (YYYY-MM-DD)'),
+  handleValidationErrors
+];
+
+/**
+ * Year query validation (e.g., stats endpoints)
+ */
+const validateYearQuery = [
+  query('year')
+    .optional()
+    .isInt({ min: 1970, max: 3000 }).withMessage('Year must be a valid number (1970-3000)'),
   handleValidationErrors
 ];
 
 module.exports = {
   validateDepartment,
   validateEmployee,
+  validateEmployeeUpdate,
   validateLeaveRequest,
   validateId,
+  validateEmployeeIdParam,
+  validateEmployeeIdBody,
   validatePagination,
+  validateEmployeeListFilters,
   validateStatus,
+  validateStatusQuery,
+  validateLeaveRequestFilters,
+  validateYearQuery,
+  buildIdValidator,
   handleValidationErrors
 };
