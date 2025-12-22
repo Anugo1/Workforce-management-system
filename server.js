@@ -5,52 +5,69 @@
 
 require('dotenv').config();
 const { sequelize, testConnection, syncDatabase } = require('./src/config/db');
+const { closeConnection: closeRabbitConnection } = require('./src/config/rabbitmq');
+const { startLeaveRequestConsumer } = require('./src/queues/leaveRequestProcessor');
 const logger = require('./src/utils/logger');
 
 // Import models to ensure they're registered
 require('./src/models');
+
+let server;
 
 /**
  * Initialize and start server
  */
 const startServer = async () => {
   try {
-    // Test database connection
     logger.info('Testing database connection...');
     await testConnection();
-    
-    // Sync database (create tables if they don't exist)
+
     logger.info('Synchronizing database...');
-    await syncDatabase({ alter: true }); // Use { force: true } to drop and recreate tables
-    
+    await syncDatabase({ alter: true });
+
     logger.info('Database is ready!');
-    logger.info('Server initialization complete');
-    
-    // TODO: Start Express server here when ready
-    // const app = require('./src/app');
-    // const PORT = process.env.PORT || 3000;
-    // app.listen(PORT, () => {
-    //   logger.info(`Server running on port ${PORT}`);
-    // });
-    
+
+    const app = require('./src/app');
+    const PORT = parseInt(process.env.PORT, 10) || 3000;
+
+    server = app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+    });
+
+    try {
+      await startLeaveRequestConsumer();
+    } catch (consumerError) {
+      logger.error('Failed to start leave request consumer', consumerError);
+    }
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Shutting down gracefully...');
-  await sequelize.close();
-  process.exit(0);
-});
+const shutdown = async (signal) => {
+  try {
+    logger.info(`${signal} received, shutting down gracefully...`);
 
-process.on('SIGTERM', async () => {
-  logger.info('Shutting down gracefully...');
-  await sequelize.close();
-  process.exit(0);
-});
+    if (server) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
 
-// Start the server
+    await Promise.allSettled([
+      sequelize.close(),
+      closeRabbitConnection?.()
+    ]);
+
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during shutdown', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
 startServer();
