@@ -22,6 +22,7 @@ const connect = async () => {
     
     connection.on('error', (err) => {
       logger.error('RabbitMQ connection error', err);
+      
       connection = null;
     });
 
