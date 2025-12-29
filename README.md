@@ -162,18 +162,6 @@ Missing RabbitMQ credentials simply disable the consumer (with warning logs) so 
 | `SequelizeConnectionError` on start        | Verify DB credentials / server accessibility. |
 | RabbitMQ consumer fails to start           | Ensure `RABBITMQ_URL`, exchange, and queue env vars are set. |
 | Requests rejected with 429                 | Rate-limiter thresholds reached; adjust env overrides for testing. |
-| Validation errors                          | Check controller-specific validation rules in `src/middleware/validation.js`. |
-
----
-
-## Contributing
-
-1. Fork & clone.
-2. Create feature branch.
-3. Implement changes with tests (when available).
-4. Run lint/tests 
-5. Submit PR.
-
----
+| Validation errors                          | Check controller-specific validation rules in `src/middleware/validation.js`. 
 
 
